@@ -36,6 +36,9 @@ EOF
 CURRENT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 SECURITY_SCRIPT="$CURRENT_DIR/linux_server_security/secure_your_server.sh"
+if [ ! -f "$SECURITY_SCRIPT" ]; then
+    error_exit "Security script not found at $SECURITY_SCRIPT"
+fi
 
 RENEW_SSL_CERT_SH="$CURRENT_DIR/renew_letsencrypt_cert.sh"
 RENEW_SSL_SERVICE_NAME="renew-ssl-cert"
@@ -60,12 +63,6 @@ COTURN_CERT_DIR="/etc/coturn"
 sudo touch "$LOG_FILE" || error_exit "Failed to create $LOG_FILE"
 sudo chmod 600 "$LOG_FILE" || error_exit "Failed to set permissions on $LOG_FILE"
 sudo chown root:root "$LOG_FILE" || error_exit "Failed to set ownership on $LOG_FILE"
-
-# Source security script
-if [ ! -f "$SECURITY_SCRIPT" ]; then
-    error_exit "Security script not found at $SECURITY_SCRIPT"
-fi
-source "$SECURITY_SCRIPT" || error_exit "Failed to source security script"
 
 # --------------------------------------------------
 # Functions
