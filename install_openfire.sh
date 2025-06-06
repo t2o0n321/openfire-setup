@@ -236,6 +236,13 @@ install_openfire() {
     mkdir -p "$OPENFIRE_TEMP_DIR" || error_exit "Failed to create $OPENFIRE_TEMP_DIR"
     wget -q "$OPENFIRE_SOURCE_BASE_URL/$OPENFIRE_DEBIAN_NAME" -O "$OPENFIRE_TEMP_DIR/$OPENFIRE_DEBIAN_NAME" || error_exit "Failed to download Openfire package"
 
+    # Extract and pre-configure openfire.xml
+    log "INFO" "Pre-configuring openfire.xml to disable 9090 and enable 9091"
+    sudo dpkg -x "$OPENFIRE_TEMP_DIR/$OPENFIRE_DEBIAN_NAME" "$OPENFIRE_TEMP_DIR/extracted"
+    sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_TEMP_DIR/extracted/usr/share/openfire/conf/openfire.xml"
+    sudo sed -i 's/<securePort>9091<\/securePort>/<securePort>9091<\/securePort>/' "$OPENFIRE_TEMP_DIR/extracted/usr/share/openfire/conf/openfire.xml"
+    sudo cp "$OPENFIRE_TEMP_DIR/extracted/usr/share/openfire/conf/openfire.xml" "$OPENFIRE_CONFIG" || error_exit "Failed to pre-configure openfire.xml"
+
     # Install Openfire
     sudo dpkg -i "$OPENFIRE_TEMP_DIR/$OPENFIRE_DEBIAN_NAME" || {
         log "WARNING" "dpkg encountered errors, attempting to fix"
@@ -248,7 +255,7 @@ install_openfire() {
     sudo chown -R openfire:openfire /var/lib/openfire || error_exit "Failed to set ownership for /var/lib/openfire"
     sudo chmod -R 750 /var/lib/openfire || error_exit "Failed to set permissions for /var/lib/openfire"
 
-    log "INFO" "Openfire installed successfully"
+    log "INFO" "Openfire installed successfully with pre-configured settings"
 }
 
 # Configure Openfire
@@ -256,7 +263,11 @@ configure_openfire() {
     local domain="$1"
     log "INFO" "Configuring Openfire"
 
-    sudo systemctl stop openfire
+    # Stop Openfire if running
+    if systemctl is-active --quiet openfire; then
+        log "INFO" "Stopping Openfire service to apply configuration"
+        sudo systemctl stop openfire || error_exit "Failed to stop Openfire"
+    fi
 
     # Log firewall ports (assuming UFW_ALLOWED_PORTS is defined in security script)
     if [ -n "${UFW_ALLOWED_PORTS+x}" ]; then
@@ -265,7 +276,7 @@ configure_openfire() {
         log "WARNING" "UFW_ALLOWED_PORTS not defined, firewall ports not logged"
     fi
 
-    # Disable port 9090
+    # Disable port 9090 (redundant check for consistency)
     log "INFO" "Disabling Openfire port 9090"
     sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG" || error_exit "Failed to disable port 9090"
     if grep -q "<port>9090</port>" "$OPENFIRE_CONFIG"; then
@@ -295,6 +306,11 @@ configure_openfire() {
         -srckeystore "$generated_p12" -srcstoretype PKCS12 \
         -destkeystore "$OPENFIRE_KEYSTORE" -deststoretype JKS \
         -srcstorepass changeit -deststorepass changeit || error_exit "Failed to import keystore"
+
+    # Verify keystore
+    if ! sudo keytool -list -keystore "$OPENFIRE_KEYSTORE" -storepass changeit | grep -q "openfire"; then
+        error_exit "Keystore import failed or certificate not found"
+    fi
 
     rm -rf "$OPENFIRE_TEMP_DIR" || error_exit "Failed to clean up $OPENFIRE_TEMP_DIR"
     sudo chown openfire:openfire "$OPENFIRE_KEYSTORE" || error_exit "Failed to set keystore ownership"
