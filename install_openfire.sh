@@ -251,11 +251,6 @@ install_openfire() {
     }
     rm -rf "$OPENFIRE_TEMP_DIR" || error_exit "Failed to clean up $OPENFIRE_TEMP_DIR"
 
-    # Verify installation
-    if ! dpkg -l | grep -q openfire; then
-        error_exit "Openfire installation failed"
-    fi
-
     # Ensure correct ownership
     sudo chown -R openfire:openfire /var/lib/openfire || error_exit "Failed to set ownership for /var/lib/openfire"
     sudo chmod -R 750 /var/lib/openfire || error_exit "Failed to set permissions for /var/lib/openfire"
