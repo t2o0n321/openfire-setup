@@ -256,6 +256,8 @@ configure_openfire() {
     local domain="$1"
     log "INFO" "Configuring Openfire"
 
+    sudo systemctl stop openfire
+
     # Log firewall ports (assuming UFW_ALLOWED_PORTS is defined in security script)
     if [ -n "${UFW_ALLOWED_PORTS+x}" ]; then
         log "INFO" "Openfire firewall configured by security script with ports: $(IFS=','; echo "${UFW_ALLOWED_PORTS[*]}")"
@@ -418,6 +420,7 @@ main() {
     install_java
     install_openfire
     configure_openfire "$domain"
+    start_openfire
     setup_coturn "$domain" "$machine_ip"
     display_instructions "$domain"
     prompt_reboot
