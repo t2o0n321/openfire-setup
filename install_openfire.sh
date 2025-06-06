@@ -35,6 +35,12 @@ EOF
 # --------------------------------------------------
 CURRENT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
+COMMON_SCRIPT="$CURRENT_DIR/linux_server_security/common.sh"
+if [ ! -f "$COMMON_SCRIPT" ]; then
+    error_exit "Common script not found at $COMMON_SCRIPT"
+fi
+source "$COMMON_SCRIPT" || error_exit "Failed to source common script at $COMMON_SCRIPT"
+
 SECURITY_SCRIPT="$CURRENT_DIR/linux_server_security/secure_your_server.sh"
 if [ ! -f "$SECURITY_SCRIPT" ]; then
     error_exit "Security script not found at $SECURITY_SCRIPT"
@@ -67,19 +73,6 @@ sudo chown root:root "$LOG_FILE" || error_exit "Failed to set ownership on $LOG_
 # --------------------------------------------------
 # Functions
 # --------------------------------------------------
-# Get timestamp for logging
-get_timestamp() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')]"
-}
-
-# Check if script is run as root
-check_permission() {
-    if [ "$EUID" -ne 0 ]; then
-        log "ERROR" "This script must be run as root or with sudo."
-        exit 1
-    fi
-}
-
 # Log messages to file and console, and to system logger
 log() {
     local level="$1"
@@ -272,7 +265,7 @@ configure_openfire() {
 
     # Disable port 9090
     log "INFO" "Disabling Openfire port 9090"
-    sudo sed -i 's/<port>9090<\/port>/<port>-1</port>/' "$OPENFIRE_CONFIG" || error_exit "Failed to disable port 9090"
+    sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG" || error_exit "Failed to disable port 9090"
     if grep -q "<port>9090</port>" "$OPENFIRE_CONFIG"; then
         error_exit "Failed to verify port 9090 disable"
     fi
