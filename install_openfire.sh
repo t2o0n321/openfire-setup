@@ -421,10 +421,10 @@ EOF
 # Main function
 main() {
     local domain="$1"
-    echo "$ARTS_TITLE"
     check_permission
     local machine_ip=$(check_domain "$domain")
     run_security_script
+    echo "$ARTS_TITLE"
     setup_ssl "$domain"
     setup_renew_ssl_cert "$domain"
     install_java
