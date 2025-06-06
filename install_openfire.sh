@@ -406,7 +406,8 @@ display_instructions() {
 * After setting up via port 9090, disable it and use 9091 for HTTPS:
 * 1. Enable 9091 through Admin Console
 * 2. Use command: sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG"
-* 3. Restart Openfire: sudo systemctl restart openfire
+* 3. Deny 9090: sudo ufw deny 9090
+* 4. Restart Openfire: sudo systemctl restart openfire
 * 
 * The Coturn server credentials are (see $COTURN_CONFIG):
 * - username=openfire
