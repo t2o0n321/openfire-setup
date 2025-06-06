@@ -620,23 +620,6 @@ EOF
     log "INFO" "Root SSH login disabled successfully"
 }
 
-# Prompt for system reboot
-prompt_reboot() {
-    local prompt_message=$(cat << EOF
-Some changes (e.g., fstab, sysctl) require a reboot to take full effect.
-Do you want to reboot the system now? (yes/no)
-EOF
-)
-    local log_message="Prompting user for system reboot"
-
-    if confirm "$prompt_message" "$log_message"; then
-        log "INFO" "Initiating system reboot"
-        sudo reboot
-    else
-        log "WARNING" "Reboot skipped. Some changes may not take effect until the system is rebooted."
-    fi
-}
-
 # Main function
 main() {
     echo "$ARTS_TITLE"
@@ -651,7 +634,6 @@ main() {
     secure_shared_memory
     kernel_hardening
     remove_insecure_services
-    prompt_reboot
 }
 
 # --------------------------------------------------

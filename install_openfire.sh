@@ -35,7 +35,8 @@ EOF
 # --------------------------------------------------
 CURRENT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
-SECURITY_SCRIPT="$CURRENT_DIR/linux_server_security/common.sh"
+SECURITY_SCRIPT="$CURRENT_DIR/linux_server_security/secure_your_server.sh"
+
 RENEW_SSL_CERT_SH="$CURRENT_DIR/renew_letsencrypt_cert.sh"
 RENEW_SSL_SERVICE_NAME="renew-ssl-cert"
 RENEW_SSL_SERVICE_FILE="/etc/systemd/system/${RENEW_SSL_SERVICE_NAME}.service"
@@ -148,7 +149,7 @@ check_domain() {
 # Run security script
 run_security_script() {
     log "INFO" "Running server security script"
-    sudo bash "$SECURITY_SCRIPT" -y || error_exit "Failed to execute security script"
+    sudo bash "$SECURITY_SCRIPT" || error_exit "Failed to execute security script"
     log "INFO" "Security script completed successfully"
 }
 
@@ -382,6 +383,23 @@ EOF
         log "INFO" "Informations saved to $info_file successfully"
     fi
     log "INFO" "Installation and configuration completed"
+}
+
+# Prompt for system reboot
+prompt_reboot() {
+    local prompt_message=$(cat << EOF
+Some changes (e.g., fstab, sysctl) require a reboot to take full effect.
+Do you want to reboot the system now? (yes/no)
+EOF
+)
+    local log_message="Prompting user for system reboot"
+
+    if confirm "$prompt_message" "$log_message"; then
+        log "INFO" "Initiating system reboot"
+        sudo reboot
+    else
+        log "WARNING" "Reboot skipped. Some changes may not take effect until the system is rebooted."
+    fi
 }
 
 # Main function
