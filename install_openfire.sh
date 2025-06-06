@@ -231,16 +231,34 @@ install_java() {
 # Install Openfire
 install_openfire() {
     log "INFO" "Installing Openfire version $OPENFIRE_VERSION"
+    
+    # Clean up existing /var/lib/openfire directory if it exists
+    if [ -d "/var/lib/openfire" ]; then
+        log "INFO" "Removing existing /var/lib/openfire directory"
+        sudo rm -rf "/var/lib/openfire" || error_exit "Failed to remove existing /var/lib/openfire directory"
+    fi
+
+    # Create temporary directory
     mkdir -p "$OPENFIRE_TEMP_DIR" || error_exit "Failed to create $OPENFIRE_TEMP_DIR"
     wget -q "$OPENFIRE_SOURCE_BASE_URL/$OPENFIRE_DEBIAN_NAME" -O "$OPENFIRE_TEMP_DIR/$OPENFIRE_DEBIAN_NAME" || error_exit "Failed to download Openfire package"
+
+    # Install Openfire
     sudo dpkg -i "$OPENFIRE_TEMP_DIR/$OPENFIRE_DEBIAN_NAME" || {
         log "WARNING" "dpkg encountered errors, attempting to fix"
+        sudo apt update || error_exit "Failed to update package lists"
         sudo apt install -f -y || error_exit "Failed to resolve dependencies"
     }
     rm -rf "$OPENFIRE_TEMP_DIR" || error_exit "Failed to clean up $OPENFIRE_TEMP_DIR"
+
+    # Verify installation
     if ! dpkg -l | grep -q openfire; then
         error_exit "Openfire installation failed"
     fi
+
+    # Ensure correct ownership
+    sudo chown -R openfire:openfire /var/lib/openfire || error_exit "Failed to set ownership for /var/lib/openfire"
+    sudo chmod -R 750 /var/lib/openfire || error_exit "Failed to set permissions for /var/lib/openfire"
+
     log "INFO" "Openfire installed successfully"
 }
 
