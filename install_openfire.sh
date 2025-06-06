@@ -236,14 +236,8 @@ install_openfire() {
     mkdir -p "$OPENFIRE_TEMP_DIR" || error_exit "Failed to create $OPENFIRE_TEMP_DIR"
     wget -q "$OPENFIRE_SOURCE_BASE_URL/$OPENFIRE_DEBIAN_NAME" -O "$OPENFIRE_TEMP_DIR/$OPENFIRE_DEBIAN_NAME" || error_exit "Failed to download Openfire package"
 
-    # Extract and pre-configure openfire.xml
-    log "INFO" "Pre-configuring openfire.xml to disable 9090 and enable 9091"
-    sudo dpkg -x "$OPENFIRE_TEMP_DIR/$OPENFIRE_DEBIAN_NAME" "$OPENFIRE_TEMP_DIR/extracted"
-    sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_TEMP_DIR/extracted/usr/share/openfire/conf/openfire.xml"
-    sudo sed -i 's/<securePort>9091<\/securePort>/<securePort>9091<\/securePort>/' "$OPENFIRE_TEMP_DIR/extracted/usr/share/openfire/conf/openfire.xml"
-    sudo cp "$OPENFIRE_TEMP_DIR/extracted/usr/share/openfire/conf/openfire.xml" "$OPENFIRE_CONFIG" || error_exit "Failed to pre-configure openfire.xml"
-
     # Install Openfire
+    log "INFO" "Installing Openfire package"
     sudo dpkg -i "$OPENFIRE_TEMP_DIR/$OPENFIRE_DEBIAN_NAME" || {
         log "WARNING" "dpkg encountered errors, attempting to fix"
         sudo apt update || error_exit "Failed to update package lists"
@@ -251,11 +245,29 @@ install_openfire() {
     }
     rm -rf "$OPENFIRE_TEMP_DIR" || error_exit "Failed to clean up $OPENFIRE_TEMP_DIR"
 
-    # Ensure correct ownership
+    sudo systemctl stop openfire
+
+    # Verify that /etc/openfire/openfire.xml exists after installation
+    if [ ! -f "$OPENFIRE_CONFIG" ]; then
+        error_exit "openfire.xml not found at $OPENFIRE_CONFIG after installation"
+    fi
+
+    # Configure openfire.xml to disable 9090 and enable 9091
+    log "INFO" "Configuring openfire.xml to disable 9090 and enable 9091"
+    sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG" || error_exit "Failed to disable port 9090 in openfire.xml"
+    sudo sed -i 's/<securePort>9091<\/securePort>/<securePort>9091<\/securePort>/' "$OPENFIRE_CONFIG" || error_exit "Failed to confirm secure port 9091 in openfire.xml"
+    if ! grep -q "<securePort>9091</securePort>" "$OPENFIRE_CONFIG"; then
+        error_exit "Secure port 9091 not correctly set in $OPENFIRE_CONFIG"
+    fi
+    log "INFO" "openfire.xml configured successfully"
+
+    # Ensure correct ownership and permissions
     sudo chown -R openfire:openfire /var/lib/openfire || error_exit "Failed to set ownership for /var/lib/openfire"
     sudo chmod -R 750 /var/lib/openfire || error_exit "Failed to set permissions for /var/lib/openfire"
+    sudo chown root:root "$OPENFIRE_CONFIG" || error_exit "Failed to set ownership for $OPENFIRE_CONFIG"
+    sudo chmod 644 "$OPENFIRE_CONFIG" || error_exit "Failed to set permissions for $OPENFIRE_CONFIG"
 
-    log "INFO" "Openfire installed successfully with pre-configured settings"
+    log "INFO" "Openfire installed successfully with configured settings"
 }
 
 # Configure Openfire
