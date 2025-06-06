@@ -157,6 +157,7 @@ setup_ssl() {
     sudo apt update
     sudo apt install certbot -y || error_exit "Failed to install certbot"
     sudo certbot certonly --standalone -d "$domain" --non-interactive --agree-tos --register-unsafely-without-email || error_exit "Failed to obtain SSL certificate"
+    sudo systemctl disable certbot.timer || error_exit "Failed to disable default certbot timer" # Certbot's default timer may conflict the custom timer
     log "INFO" "SSL certificate obtained for $domain"
 }
 
@@ -431,6 +432,7 @@ main() {
     configure_openfire "$domain"
     setup_coturn "$domain" "$machine_ip"
     display_instructions "$domain"
+    prompt_reboot
 }
 
 # --------------------------------------------------
