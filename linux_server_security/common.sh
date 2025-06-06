@@ -61,7 +61,8 @@ declare -r UFW_ALLOWED_PORTS=(
     "$SSH_CURRENT_PORT/tcp"   # SSH
     "80/tcp"        # HTTP
     "443/tcp"       # HTTPS
-    "9091/tcp"      # Openfire admin console
+    "9090/tcp"      # Openfire admin console(HTTP)
+    "9091/tcp"      # Openfire admin console(HTTPS)
     "5222/tcp"      # XMPP
     "5223/tcp"      # XMPP
     "7443/tcp"      # HTTP binding, file transfer

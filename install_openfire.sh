@@ -252,14 +252,16 @@ install_openfire() {
         error_exit "openfire.xml not found at $OPENFIRE_CONFIG after installation"
     fi
 
-    # Configure openfire.xml to disable 9090 and enable 9091
-    log "INFO" "Configuring openfire.xml to disable 9090 and enable 9091"
-    sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG" || error_exit "Failed to disable port 9090 in openfire.xml"
-    sudo sed -i 's/<securePort>9091<\/securePort>/<securePort>9091<\/securePort>/' "$OPENFIRE_CONFIG" || error_exit "Failed to confirm secure port 9091 in openfire.xml"
-    if ! grep -q "<securePort>9091</securePort>" "$OPENFIRE_CONFIG"; then
-        error_exit "Secure port 9091 not correctly set in $OPENFIRE_CONFIG"
-    fi
-    log "INFO" "openfire.xml configured successfully"
+    # [Removed feature] Configure openfire.xml to disable 9090 and enable 9091
+    # Openfire cannot configure to use 9091 to access admin console before setting up via 9090
+    # - https://discourse.igniterealtime.org/t/unable-to-access-admin-console-on-port-9091/85713/7
+    # log "INFO" "Configuring openfire.xml to disable 9090 and enable 9091"
+    # sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG" || error_exit "Failed to disable port 9090 in openfire.xml"
+    # sudo sed -i 's/<securePort>9091<\/securePort>/<securePort>9091<\/securePort>/' "$OPENFIRE_CONFIG" || error_exit "Failed to confirm secure port 9091 in openfire.xml"
+    # if ! grep -q "<securePort>9091</securePort>" "$OPENFIRE_CONFIG"; then
+    #     error_exit "Secure port 9091 not correctly set in $OPENFIRE_CONFIG"
+    # fi
+    # log "INFO" "openfire.xml configured successfully"
 
     # Ensure correct ownership and permissions
     sudo chown -R openfire:openfire /var/lib/openfire || error_exit "Failed to set ownership for /var/lib/openfire"
@@ -289,12 +291,12 @@ configure_openfire() {
     fi
 
     # Disable port 9090 (redundant check for consistency)
-    log "INFO" "Disabling Openfire port 9090"
-    sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG" || error_exit "Failed to disable port 9090"
-    if grep -q "<port>9090</port>" "$OPENFIRE_CONFIG"; then
-        error_exit "Failed to verify port 9090 disable"
-    fi
-    log "INFO" "Port 9090 disabled successfully"
+    # log "INFO" "Disabling Openfire port 9090"
+    # sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG" || error_exit "Failed to disable port 9090"
+    # if grep -q "<port>9090</port>" "$OPENFIRE_CONFIG"; then
+    #     error_exit "Failed to verify port 9090 disable"
+    # fi
+    # log "INFO" "Port 9090 disabled successfully"
 
     # Update keystore with SSL certificate
     log "INFO" "Updating Openfire keystore with SSL certificate"
@@ -399,7 +401,12 @@ display_instructions() {
     local prompt_message=$(cat << EOF
 * Openfire and Coturn are running.
 * You need to configure the Openfire admin console.
-* Please visit: https://$domain:9091
+* Please visit: http://$domain:9090
+*
+* After setting up via port 9090, disable it and use 9091 for HTTPS:
+* 1. Enable 9091 through Admin Console
+* 2. Use command: sudo sed -i 's/<port>9090<\/port>/<port>-1<\/port>/' "$OPENFIRE_CONFIG"
+* 3. Restart Openfire: sudo systemctl restart openfire
 * 
 * The Coturn server credentials are (see $COTURN_CONFIG):
 * - username=openfire
