@@ -80,8 +80,14 @@ get_timestamp() {
 
 # Check if script is run as root
 check_permission() {
+    # Check if the username is "root"
+    if [ "$USER" == "root" ]; then
+        echo "$(get_timestamp) This script mustn't be run with username 'root'."
+        exit 1
+    fi
+
     if [ "$EUID" -ne 0 ]; then
-        echo "$(get_timestamp) This script must be run as root or with sudo."
+        echo "$(get_timestamp) This script must be run with sudo."
         exit 1
     fi
 }

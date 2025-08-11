@@ -306,9 +306,11 @@ configure_openfire() {
     local privkey_pem="$OPENFIRE_TEMP_DIR/privkey.pem"
     local generated_p12="$OPENFIRE_TEMP_DIR/openfire.p12"
 
-    sudo cp "/etc/letsencrypt/live/$domain/fullchain.pem" "$fullchain_pem" \
+    # Convert domain to lowercase to match Let's Encrypt certificate directory
+    local lower_case_domain=$(echo "$domain" | tr '[:upper:]' '[:lower:]')
+    sudo cp "/etc/letsencrypt/live/$lower_case_domain/fullchain.pem" "$fullchain_pem" \
         || error_exit "Failed to copy fullchain.pem"
-    sudo cp "/etc/letsencrypt/live/$domain/privkey.pem" "$privkey_pem" \
+    sudo cp "/etc/letsencrypt/live/$lower_case_domain/privkey.pem" "$privkey_pem" \
         || error_exit "Failed to copy privkey.pem"
 
     sudo openssl pkcs12 -export \
