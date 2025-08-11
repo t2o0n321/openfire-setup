@@ -54,7 +54,10 @@ RENEW_SSL_SERVICE_TIMER_CALENDAR="*-*-* 03:00:00"
 
 LOG_FILE="/var/log/install_openfire.log"
 
-OPENFIRE_VERSION="5.0.1"
+OPENFIRE_DOWNLOAD_PAGE="https://www.igniterealtime.org/downloads/"
+OPENFIRE_VERSION=$(curl -s "$OPENFIRE_DOWNLOAD_PAGE" | \
+    grep -Eo '/downloadServlet\?filename=openfire/openfire_[0-9]+\.[0-9]+\.[0-9]+_all\.deb' | \
+    grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
 OPENFIRE_DEBIAN_NAME="openfire_${OPENFIRE_VERSION}_all.deb"
 OPENFIRE_SOURCE_BASE_URL="https://www.igniterealtime.org/downloadServlet?filename=openfire"
 OPENFIRE_TEMP_DIR="/tmp/openfire_install"
