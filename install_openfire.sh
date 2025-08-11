@@ -353,8 +353,10 @@ setup_coturn() {
     sudo apt update
     sudo apt install coturn -y || error_exit "Failed to install Coturn"
     sudo mkdir -p "$COTURN_CERT_DIR" || error_exit "Failed to create Coturn certificate directory"
-    sudo cp "/etc/letsencrypt/live/$domain/fullchain.pem" "$COTURN_CERT_DIR/fullchain.pem" || error_exit "Failed to copy fullchain.pem for Coturn"
-    sudo cp "/etc/letsencrypt/live/$domain/privkey.pem" "$COTURN_CERT_DIR/privkey.pem" || error_exit "Failed to copy privkey.pem for Coturn"
+
+    local lower_case_domain=$(echo "$domain" | tr '[:upper:]' '[:lower:]')
+    sudo cp "/etc/letsencrypt/live/$lower_case_domain/fullchain.pem" "$COTURN_CERT_DIR/fullchain.pem" || error_exit "Failed to copy fullchain.pem for Coturn"
+    sudo cp "/etc/letsencrypt/live/$lower_case_domain/privkey.pem" "$COTURN_CERT_DIR/privkey.pem" || error_exit "Failed to copy privkey.pem for Coturn"
 
     # Configure turnserver.conf
     log "INFO" "Configuring Coturn server"
