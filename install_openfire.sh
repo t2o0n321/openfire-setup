@@ -266,7 +266,7 @@ install_openfire() {
     # Ensure correct ownership and permissions
     sudo chown -R openfire:openfire /var/lib/openfire || error_exit "Failed to set ownership for /var/lib/openfire"
     sudo chmod -R 750 /var/lib/openfire || error_exit "Failed to set permissions for /var/lib/openfire"
-    sudo chown root:root "$OPENFIRE_CONFIG" || error_exit "Failed to set ownership for $OPENFIRE_CONFIG"
+    sudo chown openfire:openfire "$OPENFIRE_CONFIG" || error_exit "Failed to set ownership for $OPENFIRE_CONFIG"
     sudo chmod 644 "$OPENFIRE_CONFIG" || error_exit "Failed to set permissions for $OPENFIRE_CONFIG"
 
     log "INFO" "Openfire installed successfully with configured settings"
